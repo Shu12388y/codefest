@@ -1,5 +1,5 @@
-import { ResponseHelper } from "../../../helpers/Response.js";
-import { Blogs } from "../../../schema/blogs/blogs.model.js";
+import { ResponseHelper } from "../../../../helpers/Response.js";
+import { Blogs } from "../../../../schema/blogs/blogs.model.js";
 
 export class BlogsRepo {
   private title: string;

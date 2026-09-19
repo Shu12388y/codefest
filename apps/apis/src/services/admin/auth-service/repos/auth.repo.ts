@@ -1,5 +1,5 @@
-import { Auth } from "../../../schema/auth/auth.model.js";
-import { ResponseHelper } from "../../../helpers/Response.js";
+import { Auth } from "../../../../schema/auth/auth.model.js"
+import { ResponseHelper } from "../../../../helpers/Response.js";
 
 export class AuthRepo {
   private email;
@@ -12,10 +12,11 @@ export class AuthRepo {
 
   public async create() {
     try {
-      await new Auth({
+      const _a = await new Auth({
         email: this.email,
         password: this.password,
       });
+      await _a.save();
       const _r = new ResponseHelper(1, "created");
       return _r.response();
     } catch (error) {

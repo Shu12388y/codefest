@@ -22,6 +22,18 @@ const _ENV = {
     : (() => {
         throw new Error(`${"JWT_SECRET is required"}`);
       })(),
+
+  OPEN_ROUTER_TOKEN: process.env.OPEN_ROUTER_TOKEN
+    ? process.env.OPEN_ROUTER_TOKEN
+    : (() => {
+        throw new Error(`${"OPEN_ROUTER_TOKEN is required"}`);
+      })(),
+
+  OPEN_ROUTER_MODEL: process.env.OPEN_ROUTER_MODEL
+    ? process.env.OPEN_ROUTER_MODEL
+    : (() => {
+        throw new Error(`${"OPEN_ROUTER_MODEL is required"}`);
+      })(),
 };
 
 export const ENV = Object.freeze(_ENV);
