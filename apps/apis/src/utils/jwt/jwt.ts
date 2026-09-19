@@ -11,8 +11,9 @@ export class JWT{
 
     public generate(){
         try {
+
             const data = jwt.sign(this.jwtpayload,this.jwtsecret,{
-                expiresIn:'24Hr'
+                expiresIn:'24h'
             });
             return data; 
         } catch (error) {

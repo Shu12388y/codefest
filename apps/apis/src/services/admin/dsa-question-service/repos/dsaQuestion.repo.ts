@@ -1,5 +1,5 @@
-import { ResponseHelper } from "../../../helpers/Response.js";
-import { DsaQuestion } from "../../../schema/dsa-questions/dsaQuestion.model.js";
+import { ResponseHelper } from "../../../../helpers/Response.js";
+import { DsaQuestion } from "../../../../schema/dsa-questions/dsaQuestion.model.js";
 
 export class DSAQuestionRepo {
     private title: string;
