@@ -34,6 +34,21 @@ const _ENV = {
     : (() => {
         throw new Error(`${"OPEN_ROUTER_MODEL is required"}`);
       })(),
+  IMAGEKIT_PUBLIC_KEY: process.env.IMAGEKIT_PUBLIC_KEY
+    ? process.env.IMAGEKIT_PUBLIC_KEY
+    : (() => {
+        throw new Error(`${"IMAGEKIT_PUBLIC_KEY is required"}`);
+      })(),
+  IMAGEKIT_PRIVATE_KEY: process.env.IMAGEKIT_PRIVATE_KEY
+    ? process.env.IMAGEKIT_PRIVATE_KEY
+    : (() => {
+        throw new Error(`${"IMAGEKIT_PRIVATE_KEY is required"}`);
+      })(),
+  IMAGEKIT_URL_ENDPOINT: process.env.IMAGEKIT_URL_ENDPOINT
+    ? process.env.IMAGEKIT_URL_ENDPOINT
+    : (() => {
+        throw new Error(`${"IMAGEKIT_URL_ENDPOINT is required"}`);
+      })(),
 };
 
 export const ENV = Object.freeze(_ENV);

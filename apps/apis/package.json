@@ -11,6 +11,7 @@
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "hono": "^4.13.7",
+    "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.10.0"
   },
