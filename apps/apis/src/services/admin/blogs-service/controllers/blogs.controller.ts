@@ -4,8 +4,11 @@ import type { Context } from "hono";
 export class BlogsController {
   static async create(c: Context) {
     try {
-      const data = await c.req.json();
-      const { title, body, author, metatags } = data;
+      const data = await c.req.raw.formData();
+      const title = data.get('title') as string;
+      const body = data.get('body') as string;
+      const author = data.get('author') as string;
+      const metatags =  data.get('metatags') as string;
       // @ts-ignore
       const thumbnail = c.req?.thumbnailUrl;
 

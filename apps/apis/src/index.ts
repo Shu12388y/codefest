@@ -5,19 +5,32 @@ import { Hono } from "hono";
 import { authRouter } from "./services/admin/auth-service/routes/auth.routes.js";
 import { blogsRouter } from "./services/admin/blogs-service/routes/blogs.routes.js";
 import { dsaQuestionRouter } from "./services/admin/dsa-question-service/routes/dsaQuestion.route.js";
+import { jobPostRouter } from "./services/admin/job-service/routes/jobPost.route.js";
 import { openRouterRoute } from "./services/admin/open-router-service/routes/openRouter.routes.js";
+import { clientBlogRouter } from "./services/client/blog-service/routes/blog.routes.js";
+import { clientJobPostRouter } from "./services/client/jobPost-service/routes/jobPost.routes.js";
+import { cors } from "hono/cors";
 
 export const app = new Hono();
+
+app.use(cors({
+  origin:["http://localhost:3000"]
+}))
 
 app.get("/api/v1/admin/health", (c) => {
   c.status(200);
   return c.json("Healthy");
 });
 
+
 app.route("/api/v1/admin", authRouter);
 app.route("/api/v1/admin", blogsRouter);
 app.route("/api/v1/admin", dsaQuestionRouter);
-app.route("/api/v1/admin",openRouterRoute);
+app.route("/api/v1/admin", jobPostRouter);
+app.route("/api/v1/admin", openRouterRoute);
+
+app.route("/api/v1", clientBlogRouter);
+app.route("/api/v1", clientJobPostRouter);
 
 DB_CONNECT(ENV.DB_URI)
   .then(() => {
