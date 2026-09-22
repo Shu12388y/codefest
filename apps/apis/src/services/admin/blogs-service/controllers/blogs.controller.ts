@@ -4,7 +4,10 @@ import type { Context } from "hono";
 export class BlogsController {
   static async create(c: Context) {
     try {
-      const data = await c.req.raw.formData();
+      const requestWithFormData = c.req as typeof c.req & {
+        parsedFormData?: FormData;
+      };
+      const data = requestWithFormData.parsedFormData ?? await c.req.raw.formData();
       const title = data.get('title') as string;
       const body = data.get('body') as string;
       const author = data.get('author') as string;
@@ -72,9 +75,20 @@ export class BlogsController {
 
   static async update(c: Context) {
     try {
-      const data = await c.req.json();
+      const contentType = c.req.header("content-type") || "";
+      const requestWithFormData = c.req as typeof c.req & {
+        parsedFormData?: FormData;
+        thumbnailUrl?: string;
+      };
+      const data = contentType.includes("multipart/form-data")
+        ? requestWithFormData.parsedFormData ?? await c.req.raw.formData()
+        : await c.req.json();
       const id = c.req.param("id") || data.id || c.req.query("id");
-      const { title, body, author, metatags, thumbnail } = data;
+      const title = data.get ? data.get("title") : data.title;
+      const body = data.get ? data.get("body") : data.body;
+      const author = data.get ? data.get("author") : data.author;
+      const metatags = data.get ? data.get("metatags") : data.metatags;
+      const thumbnail = requestWithFormData.thumbnailUrl || (data.get ? data.get("thumbnail") : data.thumbnail);
 
       if (!title || !body || !author || !metatags || !thumbnail) {
         c.status(400);

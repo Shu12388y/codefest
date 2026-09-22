@@ -14,6 +14,10 @@ export class uploaderMiddleware {
       }
 
       const formData = await c.req.raw.formData();
+      const requestWithFormData = c.req as typeof c.req & {
+        parsedFormData?: FormData;
+      };
+      requestWithFormData.parsedFormData = formData;
       const fieldName = ["thumbnail", "image", "file", "upload"].find((name) =>
         formData.has(name),
       );

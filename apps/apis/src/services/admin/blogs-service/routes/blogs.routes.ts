@@ -6,5 +6,5 @@ export const blogsRouter = new Hono();
 blogsRouter.get("/blogs", BlogsController.findAll);
 blogsRouter.get("/blog/:title", BlogsController.find);
 blogsRouter.post("/blog",uploaderMiddleware.upload, BlogsController.create);
-blogsRouter.patch("/blog/:id", BlogsController.update);
+blogsRouter.patch("/blog/:id", uploaderMiddleware.upload, BlogsController.update);
 blogsRouter.delete("/blog/:id", BlogsController.delete);

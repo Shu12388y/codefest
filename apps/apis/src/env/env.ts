@@ -17,6 +17,12 @@ const _ENV = {
         throw new Error(`${"PORT is required"}`);
       })(),
 
+  CORS_ORIGINS: process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+    : (() => {
+        throw new Error(`${"CORS_ORIGINS is required (comma-separated URLs)"}`);
+      })(),
+
   JWT_SECRET: process.env.JWT_SECRET
     ? process.env.JWT_SECRET
     : (() => {

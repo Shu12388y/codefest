@@ -42,9 +42,7 @@ export class BlogsRepo {
 
   static async findAll() {
     try {
-      const data = await Blogs.find({
-        createdAt: -1,
-      });
+      const data = await Blogs.find({}).sort({ createdAt: -1 });
       const _r = new ResponseHelper(1, "Found", data);
       return _r.response();
     } catch (error) {
