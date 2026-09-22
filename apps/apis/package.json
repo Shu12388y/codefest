@@ -13,11 +13,11 @@
     "hono": "^4.13.7",
     "imagekit": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.0"
+    "mongoose": "^9.10.0",
+    "@types/node": "^26.1.1"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^26.1.1",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2"
   }
