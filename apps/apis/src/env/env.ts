@@ -18,7 +18,9 @@ const _ENV = {
       })(),
 
   CORS_ORIGINS: process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(",").map((origin) => origin.trim()).filter(Boolean)
+    ? process.env.CORS_ORIGINS.split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean)
     : (() => {
         throw new Error(`${"CORS_ORIGINS is required (comma-separated URLs)"}`);
       })(),
@@ -54,6 +56,11 @@ const _ENV = {
     ? process.env.IMAGEKIT_URL_ENDPOINT
     : (() => {
         throw new Error(`${"IMAGEKIT_URL_ENDPOINT is required"}`);
+      })(),
+  MODE: process.env.MODE
+    ? process.env.MODE
+    : (() => {
+        throw new Error(`${"MODE is required"}`);
       })(),
 };
 

@@ -1,9 +1,12 @@
 import type { Context } from "hono";
 import { DSAQuestionRepo } from "../repos/dsaQuestion.repo.js";
+import { ENV } from "../../../../env/env.js";
+import { DB_CONNECT } from "../../../../database/db.js";
 
 export class DSAQuestionController {
 	static async create(c: Context) {
 		try {
+			await DB_CONNECT(ENV.DB_URI);
 			const data = await c.req.json();
 			const {
 				title,
@@ -54,6 +57,7 @@ export class DSAQuestionController {
 
 	static async findAll(c: Context) {
 		try {
+			await DB_CONNECT(ENV.DB_URI);
 			const response = await DSAQuestionRepo.findAll();
 
 			if (response.statusCode === -1) {
@@ -72,6 +76,7 @@ export class DSAQuestionController {
 
 	static async find(c: Context) {
 		try {
+			await DB_CONNECT(ENV.DB_URI);
 			const title = c.req.param("id") || c.req.query("title");
 
 			if (!title) {
@@ -99,6 +104,7 @@ export class DSAQuestionController {
 
 	static async update(c: Context) {
 		try {
+			await DB_CONNECT(ENV.DB_URI);
 			const data = await c.req.json();
 			const id = c.req.param("id") || data.id || c.req.query("id");
 			const {
@@ -153,6 +159,7 @@ export class DSAQuestionController {
 
 	static async delete(c: Context) {
 		try {
+			await DB_CONNECT(ENV.DB_URI);
 			const id = c.req.param("id") || c.req.query("id");
 
 			if (!id) {

@@ -1,9 +1,12 @@
 import { BlogsRepo } from "../repos/blogs.repo.js";
 import type { Context } from "hono";
+import { DB_CONNECT } from "../../../../database/db.js";
+import { ENV } from "../../../../env/env.js";
 
 export class BlogsController {
   static async create(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const requestWithFormData = c.req as typeof c.req & {
         parsedFormData?: FormData;
       };
@@ -34,6 +37,7 @@ export class BlogsController {
 
   static async findAll(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const response = await BlogsRepo.findAll();
       if (response.statusCode === -1) {
         c.status(500);
@@ -51,6 +55,7 @@ export class BlogsController {
 
   static async find(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const title = c.req.param("title") || c.req.query("title");
 
       if (!title) {
@@ -75,6 +80,7 @@ export class BlogsController {
 
   static async update(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const contentType = c.req.header("content-type") || "";
       const requestWithFormData = c.req as typeof c.req & {
         parsedFormData?: FormData;
@@ -114,6 +120,7 @@ export class BlogsController {
 
   static async delete(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const id = c.req.param("id") || c.req.query("id");
 
       if (!id) {

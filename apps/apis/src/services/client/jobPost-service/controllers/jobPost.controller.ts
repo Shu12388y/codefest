@@ -1,9 +1,12 @@
 import type { Context } from "hono";
 import { JobPostRepo } from "../repo/jobPost.repo.js";
+import { DB_CONNECT } from "../../../../database/db.js";
+import { ENV } from "../../../../env/env.js";
 
 export class JobPostController {
   static async findAll(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const response = await JobPostRepo.findAll();
 
       if (response.statusCode === -1) {
@@ -22,6 +25,7 @@ export class JobPostController {
 
   static async find(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const title = c.req.param("title") || c.req.query("title");
 
       if (!title) {
