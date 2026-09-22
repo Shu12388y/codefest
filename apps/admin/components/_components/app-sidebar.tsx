@@ -3,6 +3,7 @@ import * as React from "react"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarHeader,
   SidebarMenu,
@@ -12,8 +13,11 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "../ui/sidebar"
-import { GalleryVerticalEndIcon } from "lucide-react"
-import { Link } from "react-router"
+import { GalleryVerticalEndIcon, LogOut } from "lucide-react"
+import { Link, useNavigate } from "react-router"
+import { useDispatch, useSelector } from "react-redux"
+import type { AppDispatch, RootState } from "../../store/store"
+import { logout } from "../../reducers/authReducer"
 
 // This is sample data.
 const data = {
@@ -56,15 +60,32 @@ const data = {
           title: "Blogs",
           url: "/blogs",
         },
+      ],
+    },
+    {
+      title: "Jobs",
+      url: "#",
+      items: [
         {
-          title: "Create Blogs",
-          url: "/create-blogs",
+          title: "Job posts",
+          url: "/jobs",
         },
       ],
     },
   ],
 }
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
+  const email = useSelector((state: RootState) => state.auth.email)
+  const profileLabel = email || "Administrator"
+  const initials = profileLabel.slice(0, 1).toUpperCase()
+
+  const handleLogout = () => {
+    dispatch(logout())
+    navigate("/")
+  }
+
   return (
     <Sidebar variant="floating" {...props}>
       <SidebarHeader>
@@ -111,6 +132,31 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="flex items-center gap-2 rounded-xl border bg-sidebar-accent/40 p-2">
+              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
+                {initials}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{profileLabel}</p>
+                <p className="text-xs text-muted-foreground">Admin profile</p>
+              </div>
+              <SidebarMenuButton
+                size="default"
+                variant="default"
+                className="size-8 w-8 shrink-0 justify-center rounded-lg p-0 text-muted-foreground hover:bg-destructive/10 hover:text-destructive focus-visible:ring-destructive/40"
+                onClick={handleLogout}
+                aria-label="Log out"
+                title="Log out"
+              >
+                <LogOut />
+              </SidebarMenuButton>
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }
