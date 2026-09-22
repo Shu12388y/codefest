@@ -11,7 +11,11 @@ import {
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Tabs } from "@/components/ui/tabs";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { EmptyState } from "@/components/ui/emptyState";
 import { articles, blogCategories } from "@/data/articles";
 import { cn } from "@/utils/cn";
@@ -75,7 +79,7 @@ export default function BlogPage() {
             </div>
 
             <div className="p-5">
-              <Badge variant="primary">
+              <Badge variant="default">
                 {featured.category}
               </Badge>
 
@@ -110,10 +114,17 @@ export default function BlogPage() {
 
       {/* Categories */}
       <Tabs
-        tabs={blogCategories}
-        activeTab={activeCategory}
-        onTabChange={setActiveCategory}
-      />
+        value={activeCategory}
+        onValueChange={(value) => setActiveCategory(value as string)}
+      >
+        <TabsList>
+          {blogCategories.map((category) => (
+            <TabsTrigger key={category} value={category}>
+              {category}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
 
       {/* Articles */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -143,7 +154,7 @@ export default function BlogPage() {
                 />
 
                 <div className="p-4">
-                  <Badge variant="primary">
+                  <Badge variant="default">
                     {article.category}
                   </Badge>
 
