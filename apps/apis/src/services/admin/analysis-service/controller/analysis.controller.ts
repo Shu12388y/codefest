@@ -1,9 +1,12 @@
 import type { Context } from "hono";
 import { AnalysisRepo } from "../repo/analysis.repo.js";
+import { ENV } from "../../../../env/env.js";
+import { DB_CONNECT } from "../../../../database/db.js";
 
 export class AnalysisController {
 	static async overview(c: Context) {
 		try {
+			await DB_CONNECT(ENV.DB_URI);
 			const response = await AnalysisRepo.findOverview();
 
 			if (response.statusCode === -1) {

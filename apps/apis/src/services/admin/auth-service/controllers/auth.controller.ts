@@ -3,10 +3,12 @@ import type { Context } from "hono";
 import { JWT } from "../../../../utils/jwt/jwt.js";
 import { ENV } from "../../../../env/env.js";
 import { BcryptDI } from "../../../../utils/bcrypt/bcrypt.js";
+import { DB_CONNECT } from "../../../../database/db.js";
 
 export class AuthController {
   static async signup(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const data = await c.req.json();
       let { email, password } = data;
       if (!email || !password) {
@@ -33,6 +35,7 @@ export class AuthController {
 
   static async login(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const data = await c.req.json();
       const { email, password } = data;
       if (!email || !password) {

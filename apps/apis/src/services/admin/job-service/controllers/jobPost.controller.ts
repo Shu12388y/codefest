@@ -1,9 +1,12 @@
 import type { Context } from "hono";
 import { JobPostRepo } from "../repo/jobPost.repo.js";
+import { ENV } from "../../../../env/env.js";
+import { DB_CONNECT } from "../../../../database/db.js";
 
 export class JobPostController {
   static async create(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const data = await c.req.json();
       const {
         title,
@@ -68,6 +71,7 @@ export class JobPostController {
 
   static async findAll(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const response = await JobPostRepo.findAll();
 
       if (response.statusCode === -1) {
@@ -86,6 +90,7 @@ export class JobPostController {
 
   static async find(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const title = c.req.param("title") || c.req.query("title");
 
       if (!title) {
@@ -111,6 +116,7 @@ export class JobPostController {
 
   static async update(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const data = await c.req.json();
       const id = c.req.param("id") || data.id || c.req.query("id");
       const {
@@ -176,6 +182,7 @@ export class JobPostController {
 
   static async delete(c: Context) {
     try {
+      await DB_CONNECT(ENV.DB_URI);
       const id = c.req.param("id") || c.req.query("id");
 
       if (!id) {

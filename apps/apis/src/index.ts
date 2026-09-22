@@ -14,15 +14,16 @@ import { cors } from "hono/cors";
 
 export const app = new Hono();
 
-app.use(cors({
-  origin: ENV.CORS_ORIGINS,
-}))
+app.use(
+  cors({
+    origin: ENV.CORS_ORIGINS,
+  }),
+);
 
 app.get("/api/v1/admin/health", (c) => {
   c.status(200);
   return c.json("Healthy");
 });
-
 
 app.route("/api/v1/admin", authRouter);
 app.route("/api/v1/admin", blogsRouter);
@@ -34,18 +35,21 @@ app.route("/api/v1/admin", analysisRouter);
 app.route("/api/v1", clientBlogRouter);
 app.route("/api/v1", clientJobPostRouter);
 
-DB_CONNECT(ENV.DB_URI)
-  .then(() => {
-    serve(
-      {
-        fetch: app.fetch,
-        port: parseInt(ENV.PORT),
-      },
-      (info) => {
-        console.log(`Server is running on http://localhost:${info.port}`);
-      },
-    );
-  })
-  .catch((e) => {
-    console.log(e);
-  });
+if (ENV.MODE === "dev") {
+  DB_CONNECT(ENV.DB_URI)
+    .then(() => {
+      serve(
+        {
+          fetch: app.fetch,
+          port: parseInt(ENV.PORT),
+        },
+        (info) => {
+          console.log(`Server is running on http://localhost:${info.port}`);
+        },
+      );
+    })
+    .catch((e) => {
+      console.log(e);
+    });
+}
+export default app;
