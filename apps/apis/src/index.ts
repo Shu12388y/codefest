@@ -35,8 +35,7 @@ app.route("/api/v1/admin", analysisRouter);
 app.route("/api/v1", clientBlogRouter);
 app.route("/api/v1", clientJobPostRouter);
 
-if (ENV.MODE === "dev") {
-  DB_CONNECT(ENV.DB_URI)
+DB_CONNECT(ENV.DB_URI)
     .then(() => {
       serve(
         {
@@ -51,5 +50,3 @@ if (ENV.MODE === "dev") {
     .catch((e) => {
       console.log(e);
     });
-}
-export default app;
