@@ -8,7 +8,7 @@ const floatCards = [
     icon: GraduationCap,
     label: 'GATE Preparation',
     className: 'left-0 top-6 animate-float-slow',
-    iconBg: 'bg-primary-100 text-primary-600',
+    iconBg: 'bg-indigo-100 text-indigo-600',
   },
   {
     icon: Code2,
@@ -32,15 +32,15 @@ const floatCards = [
 
 export function HeroIllustration() {
   return (
-    <div className="relative mx-auto max-w-md">
+    <div className="hero-illustration relative mx-auto max-w-md">
       {/* Soft background glow */}
-      <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary-100/50 to-primary-200/20 blur-3xl dark:from-primary-600/10 dark:to-primary-800/5" />
+      <div className="absolute inset-0 rounded-3xl bg-linear-to-br from-indigo-100/60 to-sky-100/30 blur-3xl dark:from-indigo-600/10 dark:to-sky-800/5" />
 
       {/* SVG illustration: graduation cap + laptop + books + connecting lines */}
       <svg
         viewBox="0 0 400 380"
         fill="none"
-        className="relative mx-auto w-full max-w-[400px]"
+        className="hero-illustration-art relative mx-auto w-full max-w-100"
         role="img"
         aria-label="Learning dashboard illustration with laptop, graduation cap and books"
       >
