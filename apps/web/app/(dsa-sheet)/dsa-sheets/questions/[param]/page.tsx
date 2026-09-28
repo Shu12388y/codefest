@@ -1,9 +1,11 @@
+import { QuestionWorkspace } from "./QuestionWorkspace";
+
 type QuestionPageProps = {
-	params: Promise<{ param: string }>;
+  params: Promise<{ param: string }>;
 };
 
 export default async function QuestionPage({ params }: QuestionPageProps) {
-	const { param } = await params;
+  const { param } = await params;
 
-	return <main className="p-6">Question: {param}</main>;
+  return <QuestionWorkspace title={param} />;
 }

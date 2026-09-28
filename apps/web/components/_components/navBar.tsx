@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 import {
   GraduationCap,
@@ -33,7 +34,7 @@ const mainNav = [
   {
     label: "DSA Sheet",
     icon: Code2,
-    path: "/dsa",
+    path: "/dsa-sheets",
   },
   {
     label: "Jobs",
@@ -113,6 +114,11 @@ function PublicNavItem({
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const pathname = usePathname();
+
+  if (pathname.startsWith("/sign-in") || pathname.startsWith("/signup")) {
+    return null;
+  }
 
   const handleDashboardClick = () => {
     setMobileOpen(false);
@@ -198,21 +204,26 @@ export function Navbar() {
 
           {/* Desktop Auth */}
           <div className="ml-auto hidden items-center gap-2 lg:flex">
-            <Link
-              href="/login"
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-            >
-              <LogIn className="h-4 w-4" />
-              Login
-            </Link>
+            <SignedOut>
+              <Link
+                href="/sign-in"
+                className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              >
+                <LogIn className="h-4 w-4" />
+                Login
+              </Link>
 
-            <Link
-              href="/register"
-              className="flex items-center gap-2 rounded-lg bg-primary-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
-            >
-              Get Started
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
+              <Link
+                href="/signup"
+                className="flex items-center gap-2 rounded-lg bg-primary-600 px-3.5 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+              >
+                Get Started
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
           </div>
 
           {/* Mobile Menu Button */}
@@ -288,23 +299,30 @@ export function Navbar() {
 
               {/* Mobile Auth */}
               <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-200 pt-3 dark:border-slate-800">
-                <Link
-                  href="/login"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                >
-                  <LogIn className="h-4 w-4" />
-                  Login
-                </Link>
+                <SignedOut>
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Login
+                  </Link>
 
-                <Link
-                  href="/register"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
-                >
-                  Get Started
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
+                  <Link
+                    href="/signup"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-3 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
+                  >
+                    Get Started
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </SignedOut>
+                <SignedIn>
+                  <div className="col-span-2 flex justify-end">
+                    <UserButton />
+                  </div>
+                </SignedIn>
               </div>
             </div>
           </div>
