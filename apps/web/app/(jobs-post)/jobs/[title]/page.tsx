@@ -5,17 +5,11 @@ import { ArrowLeft, BriefcaseBusiness, CalendarDays, CheckCircle2, GraduationCap
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { getJob, getJobs } from "@/lib/jobs";
+import { getJob } from "@/lib/jobs";
 
 type JobPageProps = { params: Promise<{ title: string }> };
 
-export const dynamic = "force-static";
-export const dynamicParams = false;
-
-export async function generateStaticParams() {
-  const jobs = await getJobs();
-  return jobs.map((job) => ({ title: job.title }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: JobPageProps): Promise<Metadata> {
   const { title } = await params;

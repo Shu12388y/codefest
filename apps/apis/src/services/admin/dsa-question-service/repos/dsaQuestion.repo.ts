@@ -76,6 +76,23 @@ export class DSAQuestionRepo {
         }
     }
 
+    public static async findById(_id: string) {
+        try {
+            const data = await DsaQuestion.findById(_id);
+
+            if (!data) {
+                const response = new ResponseHelper(-1, "DSA question not exists");
+                return response.response();
+            }
+
+            const response = new ResponseHelper(1, "Found", data);
+            return response.response();
+        } catch (error) {
+            const response = new ResponseHelper(-1, String(error));
+            return response.response();
+        }
+    }
+
     public async update(_id: string) {
         try {
             const data = await DsaQuestion.findByIdAndUpdate(

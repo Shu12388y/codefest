@@ -7,5 +7,5 @@ type QuestionPageProps = {
 export default async function QuestionPage({ params }: QuestionPageProps) {
   const { param } = await params;
 
-  return <QuestionWorkspace title={param} />;
+  return <QuestionWorkspace id={param} />;
 }

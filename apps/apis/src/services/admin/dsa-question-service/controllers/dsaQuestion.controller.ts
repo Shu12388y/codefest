@@ -77,14 +77,17 @@ export class DSAQuestionController {
 	static async find(c: Context) {
 		try {
 			await DB_CONNECT(ENV.DB_URI);
-			const title = c.req.param("id") || c.req.query("title");
+			const id = c.req.param("id");
+			const title = c.req.query("title");
 
-			if (!title) {
+			if (!id && !title) {
 				c.status(400);
 				return c.json({ message: "Question id or title is required" });
 			}
 
-			const response = await DSAQuestionRepo.find(title);
+			const response = id
+				? await DSAQuestionRepo.findById(id)
+				: await DSAQuestionRepo.find(title as string);
 
 			if (response.statusCode === -1) {
 				c.status(

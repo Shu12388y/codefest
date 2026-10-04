@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   ChevronLeft,
   ChevronRight,
@@ -34,132 +35,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../../../components/ui/dropdown-menu";
-import { Link } from "react-router";
-
-type Question = {
-  id: string;
-  title: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  topic: string;
-  acceptance: string;
-  submissions: number;
-  status: "Published" | "Draft";
-  createdAt: string;
-};
-
-const questions: Question[] = [
-  {
-    id: "DSA-001",
-    title: "Two Sum",
-    difficulty: "Easy",
-    topic: "Arrays",
-    acceptance: "49.2%",
-    submissions: 12482,
-    status: "Published",
-    createdAt: "Sep 12, 2026",
-  },
-  {
-    id: "DSA-002",
-    title: "Longest Substring Without Repeating Characters",
-    difficulty: "Medium",
-    topic: "Strings",
-    acceptance: "38.7%",
-    submissions: 9821,
-    status: "Published",
-    createdAt: "Sep 10, 2026",
-  },
-  {
-    id: "DSA-003",
-    title: "Merge K Sorted Lists",
-    difficulty: "Hard",
-    topic: "Linked List",
-    acceptance: "41.3%",
-    submissions: 7234,
-    status: "Published",
-    createdAt: "Sep 08, 2026",
-  },
-  {
-    id: "DSA-004",
-    title: "Binary Tree Level Order Traversal",
-    difficulty: "Medium",
-    topic: "Trees",
-    acceptance: "56.8%",
-    submissions: 6543,
-    status: "Published",
-    createdAt: "Sep 06, 2026",
-  },
-  {
-    id: "DSA-005",
-    title: "Valid Parentheses",
-    difficulty: "Easy",
-    topic: "Stack",
-    acceptance: "67.4%",
-    submissions: 15432,
-    status: "Published",
-    createdAt: "Sep 04, 2026",
-  },
-  {
-    id: "DSA-006",
-    title: "Word Search",
-    difficulty: "Medium",
-    topic: "Backtracking",
-    acceptance: "44.1%",
-    submissions: 5231,
-    status: "Draft",
-    createdAt: "Sep 03, 2026",
-  },
-  {
-    id: "DSA-007",
-    title: "Trapping Rain Water",
-    difficulty: "Hard",
-    topic: "Two Pointers",
-    acceptance: "48.5%",
-    submissions: 8124,
-    status: "Published",
-    createdAt: "Sep 01, 2026",
-  },
-  {
-    id: "DSA-008",
-    title: "Maximum Subarray",
-    difficulty: "Medium",
-    topic: "Dynamic Programming",
-    acceptance: "51.2%",
-    submissions: 10321,
-    status: "Published",
-    createdAt: "Aug 30, 2026",
-  },
-  {
-    id: "DSA-009",
-    title: "Reverse Linked List",
-    difficulty: "Easy",
-    topic: "Linked List",
-    acceptance: "72.3%",
-    submissions: 18231,
-    status: "Published",
-    createdAt: "Aug 28, 2026",
-  },
-  {
-    id: "DSA-010",
-    title: "Course Schedule",
-    difficulty: "Medium",
-    topic: "Graphs",
-    acceptance: "46.7%",
-    submissions: 6321,
-    status: "Draft",
-    createdAt: "Aug 25, 2026",
-  },
-];
+import { Link, useNavigate } from "react-router";
+import type { AppDispatch, RootState } from "../../../store/store";
+import { fetchQuestions, removeQuestion } from "../../../reducers/questionReducer";
 
 const ITEMS_PER_PAGE = 5;
 
-const difficultyStyles = {
-  Easy: "bg-green-50 text-green-700 border-green-200",
-  Medium: "bg-yellow-50 text-yellow-700 border-yellow-200",
-  Hard: "bg-red-50 text-red-700 border-red-200",
-};
+const formatDate = (date?: string) =>
+  date ? new Date(date).toLocaleDateString() : "-";
 
 export default function DSAQuestions() {
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const { items: questions, loading, error } = useSelector((state: RootState) => state.questions);
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    void dispatch(fetchQuestions());
+  }, [dispatch]);
+
+  const handleDelete = async (id: string, title: string) => {
+    if (!window.confirm(`Delete "${title}"?`)) return;
+    await dispatch(removeQuestion(id));
+  };
 
   const totalPages = Math.ceil(
     questions.length / ITEMS_PER_PAGE
@@ -208,19 +106,15 @@ export default function DSAQuestions() {
                 </TableHead>
 
                 <TableHead>
-                  Difficulty
+                  Tags
                 </TableHead>
 
                 <TableHead>
-                  Topic
+                  Public cases
                 </TableHead>
 
                 <TableHead>
-                  Acceptance
-                </TableHead>
-
-                <TableHead>
-                  Submissions
+                  Hidden cases
                 </TableHead>
 
                 <TableHead>
@@ -236,15 +130,27 @@ export default function DSAQuestions() {
             </TableHeader>
 
             <TableBody>
-              {currentQuestions.map((question) => (
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    Loading questions...
+                  </TableCell>
+                </TableRow>
+              ) : currentQuestions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    {error || "No questions found."}
+                  </TableCell>
+                </TableRow>
+              ) : currentQuestions.map((question) => (
                 <TableRow
-                  key={question.id}
+                  key={question._id}
                   className="hover:bg-muted/30"
                 >
                   {/* ID */}
                   <TableCell>
                     <span className="font-mono text-xs font-medium text-muted-foreground">
-                      {question.id}
+                      {question._id}
                     </span>
                   </TableCell>
 
@@ -257,55 +163,31 @@ export default function DSAQuestions() {
                     </div>
                   </TableCell>
 
-                  {/* Difficulty */}
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        difficultyStyles[
-                          question.difficulty
-                        ]
-                      }
-                    >
-                      {question.difficulty}
-                    </Badge>
-                  </TableCell>
-
-                  {/* Topic */}
+                  {/* Tags */}
                   <TableCell>
                     <Badge variant="secondary">
-                      {question.topic}
+                      {question.tags || "No tags"}
                     </Badge>
                   </TableCell>
 
-                  {/* Acceptance */}
+                  {/* Public test cases */}
                   <TableCell>
-                    <span className="font-medium">
-                      {question.acceptance}
-                    </span>
+                    <Badge variant="outline">Ready</Badge>
                   </TableCell>
 
-                  {/* Submissions */}
+                  {/* Hidden test cases */}
                   <TableCell>
-                    {question.submissions.toLocaleString()}
+                    <Badge variant="outline">Ready</Badge>
                   </TableCell>
 
                   {/* Status */}
                   <TableCell>
-                    <Badge
-                      variant={
-                        question.status === "Published"
-                          ? "default"
-                          : "secondary"
-                      }
-                    >
-                      {question.status}
-                    </Badge>
+                    <Badge>Created</Badge>
                   </TableCell>
 
                   {/* Created */}
                   <TableCell className="text-sm text-muted-foreground">
-                    {question.createdAt}
+                    {formatDate(question.createdAt)}
                   </TableCell>
 
                   {/* Actions */}
@@ -327,14 +209,14 @@ export default function DSAQuestions() {
                           View
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/add-question?edit=${encodeURIComponent(question._id)}`)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator />
 
-                        <DropdownMenuItem className="text-destructive">
+                        <DropdownMenuItem className="text-destructive" onClick={() => void handleDelete(question._id, question.title)}>
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete
                         </DropdownMenuItem>
@@ -352,7 +234,7 @@ export default function DSAQuestions() {
           <p className="text-sm text-muted-foreground">
             Showing{" "}
             <span className="font-medium text-foreground">
-              {startIndex + 1}
+              {questions.length ? startIndex + 1 : 0}
             </span>{" "}
             to{" "}
             <span className="font-medium text-foreground">
