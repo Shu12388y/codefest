@@ -5,6 +5,7 @@ import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/_components/navBar";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ReduxProvider } from "@/components/_components/ReduxProvider";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -31,8 +32,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className={cn("font-sans", geist.variable)}>
         <body className={`${geistSans.variable} ${geistMono.variable}`}>
-          <Navbar />
-          {children}
+          <ReduxProvider>
+            <Navbar />
+            {children}
+          </ReduxProvider>
         </body>
       </html>
     </ClerkProvider>

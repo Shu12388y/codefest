@@ -7,8 +7,8 @@ import type { DsaQuestion } from "@/lib/dsaQuestions";
 
 type DsaQuestionListProps = { questions: DsaQuestion[] };
 
-function questionHref(title: string) {
-  return `/dsa-sheets/questions/${encodeURIComponent(title)}`;
+function questionHref(id: string) {
+  return `/dsa-sheets/questions/${encodeURIComponent(id)}`;
 }
 
 export function DsaQuestionList({ questions }: DsaQuestionListProps) {
@@ -45,7 +45,7 @@ export function DsaQuestionList({ questions }: DsaQuestionListProps) {
             </div>
             <div className="space-y-3">
               {questions.map((question, index) => (
-                <Link key={question._id || question.title} href={questionHref(question.title)} className="group block">
+                <Link key={question._id || question.title} href={questionHref(question._id)} className="group block">
                   <Card className="border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-primary-200 group-hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:group-hover:border-primary-800 sm:p-6">
                     <div className="flex items-start gap-4">
                       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-950/50 dark:text-primary-400"><Code2 className="h-4 w-4" /></div>

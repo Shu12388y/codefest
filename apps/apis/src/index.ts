@@ -8,6 +8,7 @@ import { dsaQuestionRouter } from "./services/admin/dsa-question-service/routes/
 import { jobPostRouter } from "./services/admin/job-service/routes/jobPost.route.js";
 import { openRouterRoute } from "./services/admin/open-router-service/routes/openRouter.routes.js";
 import { analysisRouter } from "./services/admin/analysis-service/routes/analysis.routes.js";
+import { submissionRouter } from "./services/admin/submission-service/routes/submission.routes.js";
 import { clientBlogRouter } from "./services/client/blog-service/routes/blog.routes.js";
 import { clientJobPostRouter } from "./services/client/jobPost-service/routes/jobPost.routes.js";
 import { cors } from "hono/cors";
@@ -31,6 +32,7 @@ app.route("/api/v1/admin", dsaQuestionRouter);
 app.route("/api/v1/admin", jobPostRouter);
 app.route("/api/v1/admin", openRouterRoute);
 app.route("/api/v1/admin", analysisRouter);
+app.route("/api/v1/admin", submissionRouter);
 
 app.route("/api/v1", clientBlogRouter);
 app.route("/api/v1", clientJobPostRouter);

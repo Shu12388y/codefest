@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { CalendarIcon, X, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { CalendarIcon, X, Save, Sparkles } from "lucide-react";
 
 import { Button } from "../../../components/ui/button";
 import {
@@ -26,46 +27,191 @@ import { Calendar } from "../../../components/ui/calendar";
 import { Badge } from "../../../components/ui/badge";
 
 import { cn } from "../../../lib/utils";
+import { generateQuestion } from "../../../handlers/handler";
+import type { AppDispatch, RootState } from "../../../store/store";
+import {
+  addQuestion,
+  editQuestion,
+  loadQuestion,
+  resetQuestionDraft,
+  setQuestionDraft,
+} from "../../../reducers/questionReducer";
+import { useNavigate, useSearchParams } from "react-router";
+
+type GeneratedQuestion = {
+  title?: string;
+  description?: string;
+  tags?: string | string[];
+  testInput?: string;
+  testOutput?: string;
+  judgeInput?: string;
+  judgeOutput?: string;
+};
+
+function parseGeneratedQuestion(value: string): GeneratedQuestion {
+  const json = value.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+  return JSON.parse(json) as GeneratedQuestion;
+}
 
 export default function CreateDSAQuestion() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState<string[]>(["Arrays", "Hashing"]);
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
+  const { draft, loading, error, created } = useSelector((state: RootState) => state.questions);
+  const { title, description, tags: tagList, testInput, testOutput, judgeInput: hiddenInput, judgeOutput: hiddenOutput } = draft;
+  const tags = tagList ? tagList.split(",").map((tag) => tag.trim()).filter(Boolean) : [];
   const [tagInput, setTagInput] = useState("");
 
   const [scheduleDate, setScheduleDate] = useState<Date>();
 
-  const [testInput, setTestInput] = useState("");
-  const [testOutput, setTestOutput] = useState("");
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const [topic, setTopic] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationError, setGenerationError] = useState("");
 
-  const [hiddenInput, setHiddenInput] = useState("");
-  const [hiddenOutput, setHiddenOutput] = useState("");
+  useEffect(() => {
+    if (editId) {
+      void dispatch(loadQuestion(editId));
+    } else {
+      dispatch(resetQuestionDraft());
+    }
+  }, [dispatch, editId]);
+
+  const fillGeneratedQuestion = async () => {
+    if (!topic.trim()) {
+      setGenerationError("Enter a topic first.");
+      return;
+    }
+
+    setIsGenerating(true);
+    setGenerationError("");
+
+    try {
+      const response = await generateQuestion(topic.trim());
+      if (!response.data) throw new Error("The AI service returned no question.");
+
+      const question = parseGeneratedQuestion(response.data);
+      dispatch(setQuestionDraft({
+        title: question.title || "",
+        description: question.description || "",
+        tags: Array.isArray(question.tags) ? question.tags.join(", ") : question.tags || "",
+        testInput: question.testInput || "",
+        testOutput: question.testOutput || "",
+        judgeInput: question.judgeInput || "",
+        judgeOutput: question.judgeOutput || "",
+      }));
+      setTagInput("");
+      setIsGeneratorOpen(false);
+      setTopic("");
+    } catch {
+      setGenerationError("Could not generate a question. Check the API and try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const addTag = () => {
     const tag = tagInput.trim();
 
     if (!tag || tags.includes(tag)) return;
 
-    setTags([...tags, tag]);
+    dispatch(setQuestionDraft({ tags: [...tags, tag].join(", ") }));
     setTagInput("");
   };
 
   const removeTag = (tag: string) => {
-    setTags(tags.filter((item) => item !== tag));
+    dispatch(setQuestionDraft({ tags: tags.filter((item) => item !== tag).join(", ") }));
+  };
+
+  const submitQuestion = async () => {
+    const result = editId
+      ? await dispatch(editQuestion({ ...draft, id: editId }))
+      : await dispatch(addQuestion(draft));
+
+    if (result.meta.requestStatus === "fulfilled") navigate("/questions");
   };
 
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Create DSA Question
-        </h1>
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {editId ? "Edit DSA Question" : "Create DSA Question"}
+          </h1>
+
+          <Button type="button" onClick={() => setIsGeneratorOpen(true)}>
+            <Sparkles className="mr-2 h-4 w-4" />
+            Generate with AI
+          </Button>
+        </div>
 
         <p className="mt-1 text-sm text-muted-foreground">
           Create a coding problem with test cases and scheduling configuration.
         </p>
       </div>
+
+      {isGeneratorOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="generate-question-title"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !isGenerating) setIsGeneratorOpen(false);
+          }}
+        >
+          <Card className="w-full max-w-md rounded-2xl shadow-xl">
+            <CardHeader>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <CardTitle id="generate-question-title">Generate a question</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Enter a DSA topic and AI will fill the form for you.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Close generator"
+                  disabled={isGenerating}
+                  onClick={() => setIsGeneratorOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="question-topic">Topic</Label>
+                <Input
+                  id="question-topic"
+                  autoFocus
+                  value={topic}
+                  onChange={(event) => setTopic(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") void fillGeneratedQuestion();
+                  }}
+                  placeholder="e.g. Sliding Window"
+                  disabled={isGenerating}
+                />
+              </div>
+              {generationError && <p className="text-sm text-destructive">{generationError}</p>}
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" disabled={isGenerating} onClick={() => setIsGeneratorOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="button" disabled={isGenerating} onClick={() => void fillGeneratedQuestion()}>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  {isGenerating ? "Generating..." : "Generate question"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         {/* LEFT COLUMN */}
@@ -85,7 +231,7 @@ export default function CreateDSAQuestion() {
                   id="title"
                   placeholder="e.g. Maximum Subarray Sum"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => dispatch(setQuestionDraft({ title: e.target.value }))}
                 />
               </div>
 
@@ -140,7 +286,7 @@ export default function CreateDSAQuestion() {
                   <Textarea
                     id="description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(e) => dispatch(setQuestionDraft({ description: e.target.value }))}
                     placeholder={`## Problem
 
 Given an array of integers, find the maximum
@@ -221,7 +367,7 @@ Output:
 
                   <Textarea
                     value={testInput}
-                    onChange={(e) => setTestInput(e.target.value)}
+                    onChange={(e) => dispatch(setQuestionDraft({ testInput: e.target.value }))}
                     placeholder={`5
 1 2 3 4 5`}
                     className="min-h-[220px] resize-none font-mono text-sm"
@@ -234,7 +380,7 @@ Output:
 
                   <Textarea
                     value={testOutput}
-                    onChange={(e) => setTestOutput(e.target.value)}
+                    onChange={(e) => dispatch(setQuestionDraft({ testOutput: e.target.value }))}
                     placeholder={`15`}
                     className="min-h-[220px] resize-none font-mono text-sm"
                   />
@@ -267,7 +413,7 @@ Output:
 
                   <Textarea
                     value={hiddenInput}
-                    onChange={(e) => setHiddenInput(e.target.value)}
+                    onChange={(e) => dispatch(setQuestionDraft({ judgeInput: e.target.value }))}
                     placeholder={`100000
 1 4 2 8 5 ...`}
                     className="min-h-[240px] resize-none font-mono text-sm"
@@ -280,7 +426,7 @@ Output:
 
                   <Textarea
                     value={hiddenOutput}
-                    onChange={(e) => setHiddenOutput(e.target.value)}
+                    onChange={(e) => dispatch(setQuestionDraft({ judgeOutput: e.target.value }))}
                     placeholder={`999999`}
                     className="min-h-[240px] resize-none font-mono text-sm"
                   />
@@ -386,10 +532,13 @@ Output:
           {/* Submit */}
           <Card className="rounded-2xl">
             <CardContent className="p-5">
-              <Button className="w-full" size="lg" type="button">
+              <Button className="w-full" size="lg" type="button" disabled={loading} onClick={() => void submitQuestion()}>
                 <Save className="mr-2 h-4 w-4" />
-                Create Question
+                {loading ? (editId ? "Saving..." : "Creating...") : (editId ? "Save Changes" : "Create Question")}
               </Button>
+
+              {error && <p className="mt-3 text-center text-sm text-destructive">{error}</p>}
+              {created && <p className="mt-3 text-center text-sm text-emerald-600">Question created successfully.</p>}
 
               <p className="mt-3 text-center text-xs text-muted-foreground">
                 Make sure all test cases are correct before publishing.

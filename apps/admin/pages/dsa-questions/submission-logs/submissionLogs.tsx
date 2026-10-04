@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   CheckCircle2,
   XCircle,
@@ -7,6 +8,8 @@ import {
   ChevronRight,
   MoreHorizontal,
 } from "lucide-react";
+import type { AppDispatch, RootState } from "../../../store/store";
+import { fetchSubmissions } from "../../../reducers/submissionReducer";
 
 import {
   Table,
@@ -25,100 +28,6 @@ import {
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
-
-type Submission = {
-  id: string;
-  user: string;
-  email: string;
-  problem: string;
-  language: string;
-  status: "Accepted" | "Wrong Answer" | "Time Limit" | "Runtime Error";
-  runtime: string;
-  submittedAt: string;
-};
-
-const submissions: Submission[] = [
-  {
-    id: "SUB-10291",
-    user: "Rahul Sharma",
-    email: "rahul@example.com",
-    problem: "Two Sum",
-    language: "C++",
-    status: "Accepted",
-    runtime: "42 ms",
-    submittedAt: "2 mins ago",
-  },
-  {
-    id: "SUB-10290",
-    user: "Priya Singh",
-    email: "priya@example.com",
-    problem: "Binary Search",
-    language: "Python",
-    status: "Wrong Answer",
-    runtime: "38 ms",
-    submittedAt: "5 mins ago",
-  },
-  {
-    id: "SUB-10289",
-    user: "Aman Verma",
-    email: "aman@example.com",
-    problem: "Merge Intervals",
-    language: "Java",
-    status: "Accepted",
-    runtime: "76 ms",
-    submittedAt: "8 mins ago",
-  },
-  {
-    id: "SUB-10288",
-    user: "Neha Gupta",
-    email: "neha@example.com",
-    problem: "Valid Parentheses",
-    language: "JavaScript",
-    status: "Time Limit",
-    runtime: "2.01 s",
-    submittedAt: "12 mins ago",
-  },
-  {
-    id: "SUB-10287",
-    user: "Arjun Patel",
-    email: "arjun@example.com",
-    problem: "Longest Substring",
-    language: "Go",
-    status: "Accepted",
-    runtime: "29 ms",
-    submittedAt: "16 mins ago",
-  },
-  {
-    id: "SUB-10286",
-    user: "Sneha Das",
-    email: "sneha@example.com",
-    problem: "Maximum Subarray",
-    language: "C++",
-    status: "Runtime Error",
-    runtime: "51 ms",
-    submittedAt: "21 mins ago",
-  },
-  {
-    id: "SUB-10285",
-    user: "Vikash Kumar",
-    email: "vikash@example.com",
-    problem: "Climbing Stairs",
-    language: "Python",
-    status: "Accepted",
-    runtime: "31 ms",
-    submittedAt: "27 mins ago",
-  },
-  {
-    id: "SUB-10284",
-    user: "Ankit Roy",
-    email: "ankit@example.com",
-    problem: "Linked List Cycle",
-    language: "Rust",
-    status: "Wrong Answer",
-    runtime: "44 ms",
-    submittedAt: "32 mins ago",
-  },
-];
 
 const statusConfig = {
   Accepted: {
@@ -141,12 +50,25 @@ const statusConfig = {
     className:
       "border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-900 dark:bg-orange-950 dark:text-orange-400",
   },
+  QUEUE: {
+    icon: Clock3,
+    className:
+      "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-400",
+  },
 };
 
 const ITEMS_PER_PAGE = 5;
 
 export default function SubmissionLogs() {
+  const dispatch = useDispatch<AppDispatch>();
+  const { items: submissions, loading, error } = useSelector(
+    (state: RootState) => state.submissions,
+  );
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    void dispatch(fetchSubmissions());
+  }, [dispatch]);
 
   const totalPages = Math.ceil(
     submissions.length / ITEMS_PER_PAGE
@@ -204,19 +126,31 @@ export default function SubmissionLogs() {
             </TableHeader>
 
             <TableBody>
-              {currentSubmissions.map((submission) => {
-                const status = statusConfig[submission.status];
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    Loading submissions...
+                  </TableCell>
+                </TableRow>
+              ) : currentSubmissions.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    {error || "No submissions found."}
+                  </TableCell>
+                </TableRow>
+              ) : currentSubmissions.map((submission) => {
+                const status = statusConfig[submission.status as keyof typeof statusConfig] || statusConfig.QUEUE;
                 const StatusIcon = status.icon;
 
                 return (
                   <TableRow
-                    key={submission.id}
+                    key={submission._id}
                     className="hover:bg-muted/30"
                   >
                     {/* ID */}
                     <TableCell>
                       <span className="font-mono text-xs font-medium">
-                        {submission.id}
+                        {submission._id}
                       </span>
                     </TableCell>
 
@@ -224,11 +158,11 @@ export default function SubmissionLogs() {
                     <TableCell>
                       <div>
                         <p className="font-medium">
-                          {submission.user}
+                          {submission.userId}
                         </p>
 
                         <p className="text-xs text-muted-foreground">
-                          {submission.email}
+                          {submission._id}
                         </p>
                       </div>
                     </TableCell>
@@ -236,7 +170,7 @@ export default function SubmissionLogs() {
                     {/* Problem */}
                     <TableCell>
                       <span className="font-medium">
-                        {submission.problem}
+                        Not available
                       </span>
                     </TableCell>
 
@@ -260,12 +194,12 @@ export default function SubmissionLogs() {
 
                     {/* Runtime */}
                     <TableCell className="font-mono text-sm">
-                      {submission.runtime}
+                      -
                     </TableCell>
 
                     {/* Time */}
                     <TableCell className="text-sm text-muted-foreground">
-                      {submission.submittedAt}
+                      {submission.createdAt ? new Date(submission.createdAt).toLocaleString() : "-"}
                     </TableCell>
 
                     {/* Actions */}
@@ -290,7 +224,7 @@ export default function SubmissionLogs() {
           <p className="text-sm text-muted-foreground">
             Showing{" "}
             <span className="font-medium text-foreground">
-              {startIndex + 1}
+              {submissions.length ? startIndex + 1 : 0}
             </span>{" "}
             to{" "}
             <span className="font-medium text-foreground">

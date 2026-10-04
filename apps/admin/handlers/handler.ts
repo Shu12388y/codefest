@@ -148,3 +148,61 @@ export const analysis = async () => {
   const response = await api.get("/api/v1/admin/analysis");
   return response.data;
 };
+
+export const generateQuestion = async (topic: string) => {
+  const response = await api.post("/api/v1/admin/call", { ip: topic });
+  return response.data as { data?: string; message?: string };
+};
+
+export type QuestionPayload = {
+  title: string;
+  description: string;
+  tags: string;
+  testInput: string;
+  testOutput: string;
+  judgeInput: string;
+  judgeOutput: string;
+};
+
+export const createQuestion = async (payload: QuestionPayload) => {
+  const response = await api.post("/api/v1/admin/question", payload);
+  return response.data as { data?: QuestionPayload & { _id: string }; message?: string };
+};
+
+export const questions = async () => {
+  const response = await api.get("/api/v1/admin/questions");
+  return response.data as { data?: Array<QuestionPayload & { _id: string; createdAt?: string; updatedAt?: string }>; message?: string };
+};
+
+export const question = async (id: string) => {
+  const response = await api.get(`/api/v1/admin/question/${id}`);
+  return response.data as { data?: QuestionPayload & { _id: string; createdAt?: string; updatedAt?: string }; message?: string };
+};
+
+export const updateQuestion = async ({ id, ...payload }: QuestionPayload & { id: string }) => {
+  const response = await api.patch(`/api/v1/admin/question/${id}`, payload);
+  return response.data as { data?: QuestionPayload & { _id: string; createdAt?: string; updatedAt?: string }; message?: string };
+};
+
+export const deleteQuestion = async (id: string) => {
+  const response = await api.delete(`/api/v1/admin/question/${id}`);
+  return response.data as { data?: { _id: string }; message?: string };
+};
+
+export type SubmissionLog = {
+  _id: string;
+  userId: string;
+  code: string;
+  language: string;
+  stdout?: string;
+  stderr?: string;
+  stdin?: string;
+  status: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export const submissions = async () => {
+  const response = await api.get("/api/v1/admin/submissions");
+  return response.data as { data?: SubmissionLog[]; message?: string };
+};
