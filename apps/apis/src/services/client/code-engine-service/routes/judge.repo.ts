@@ -3,5 +3,5 @@ import { JudgeController } from "../controller/judge.controller.js";
 
 export const judgeRouter = new Hono();
 
-judgeRouter.post("/",JudgeController.submit);
-judgeRouter.get("/",JudgeController.result);
+judgeRouter.post("/submit",JudgeController.submit);
+judgeRouter.get("/result",JudgeController.result);

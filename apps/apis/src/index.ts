@@ -1,6 +1,6 @@
 import { DB_CONNECT } from "./database/db.js";
 import { ENV } from "./env/env.js";
-import { serve } from "@hono/node-server";
+import { serve as nodeServe } from "@hono/node-server";
 import { Hono } from "hono";
 import { authRouter } from "./services/admin/auth-service/routes/auth.routes.js";
 import { blogsRouter } from "./services/admin/blogs-service/routes/blogs.routes.js";
@@ -12,6 +12,10 @@ import { submissionRouter } from "./services/admin/submission-service/routes/sub
 import { clientBlogRouter } from "./services/client/blog-service/routes/blog.routes.js";
 import { clientJobPostRouter } from "./services/client/jobPost-service/routes/jobPost.routes.js";
 import { cors } from "hono/cors";
+import { serve as inngestServe } from "inngest/hono";
+import { inngest,functions } from "./utils/inngest/inngest.js";
+import { judgeRouter } from "./services/client/code-engine-service/routes/judge.repo.js";
+
 
 export const app = new Hono();
 
@@ -20,6 +24,15 @@ app.use(
     origin: ENV.CORS_ORIGINS,
   }),
 );
+app.on(
+  ["GET", "PUT", "POST"],
+  ["/api/inngest"],
+  inngestServe({
+    client: inngest,
+    functions,
+  })
+);
+
 
 app.get("/api/v1/admin/health", (c) => {
   c.status(200);
@@ -36,10 +49,12 @@ app.route("/api/v1/admin", submissionRouter);
 
 app.route("/api/v1", clientBlogRouter);
 app.route("/api/v1", clientJobPostRouter);
+app.route("/api/v1", judgeRouter);
+
 
 DB_CONNECT(ENV.DB_URI)
     .then(() => {
-      serve(
+      nodeServe(
         {
           fetch: app.fetch,
           port: parseInt(ENV.PORT),

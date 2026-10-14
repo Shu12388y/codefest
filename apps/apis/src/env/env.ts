@@ -62,6 +62,16 @@ const _ENV = {
     : (() => {
         throw new Error(`${"MODE is required"}`);
       })(),
+  JUDGE_URL: process.env.JUDGE_URL
+    ? process.env.JUDGE_URL
+    : (() => {
+        throw new Error(`${"JUDGE_URL is required"}`);
+      })(),
+  JUDGE_TOKEN: process.env.JUDGE_TOKEN
+    ? process.env.JUDGE_TOKEN
+    : (() => {
+        throw new Error(`${"JUDGE_TOKEN is required"}`);
+      })(),
 };
 
 export const ENV = Object.freeze(_ENV);

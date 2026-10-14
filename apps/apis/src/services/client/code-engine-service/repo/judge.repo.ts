@@ -1,4 +1,4 @@
-import { userSubmission } from "../../../../schema/user-submission/userSubmission.model.js";
+import { UserSubmission } from "../../../../schema/user-submission/userSubmission.model.js";
 import { ResponseHelper } from "../../../../helpers/Response.js";
 
 type SubmissionData = {
@@ -10,12 +10,14 @@ type SubmissionData = {
   stderr?: string;
   stdin?: string;
   status?: string;
+  submissionType?:string;
+  questionId?:string
 };
 
 export class OnlineCodeJudgeRepo {
   static async findAll() {
     try {
-      const data = await userSubmission.find().sort({ createdAt: -1 });
+      const data = await UserSubmission.find().sort({ createdAt: -1 });
       const response = new ResponseHelper(1, "Found", data);
       return response.response();
     } catch (error) {
@@ -26,7 +28,7 @@ export class OnlineCodeJudgeRepo {
 
   static async find(submissionId: string) {
     try {
-      const data = await userSubmission.findOne({ submissionId });
+      const data = await UserSubmission.findOne({ submissionId });
 
       if (!data) {
         const response = new ResponseHelper(-1, "Submission not exists");
@@ -43,7 +45,7 @@ export class OnlineCodeJudgeRepo {
 
   static async create(submission: SubmissionData) {
     try {
-      const data = await userSubmission.create(submission);
+      const data = await UserSubmission.create(submission);
       const response = new ResponseHelper(1, "Created", data);
       return response.response();
     } catch (error) {
@@ -54,7 +56,7 @@ export class OnlineCodeJudgeRepo {
 
   static async update(submissionId: string, submission: SubmissionData) {
     try {
-      const data = await userSubmission.findOneAndUpdate(
+      const data = await UserSubmission.findOneAndUpdate(
         { submissionId },
         submission,
         { new: true, runValidators: true },

@@ -6,7 +6,13 @@ const userSubmissionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    submissionType:{
+      type:String
+    },
     submissionId:{
+      type:String
+    },
+    questionId:{
       type:String
     },
     code: {
@@ -36,6 +42,6 @@ const userSubmissionSchema = new mongoose.Schema(
   },
 );
 
-export const userSubmission =
+export const UserSubmission =
   mongoose.models.usersubmissions ||
   mongoose.model("usersubmission", userSubmissionSchema);
