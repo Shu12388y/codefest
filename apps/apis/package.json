@@ -4,17 +4,19 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "inngest:dev": "pnpm dlx inngest-cli@latest dev"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
+    "@types/node": "^26.1.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "hono": "^4.13.7",
     "imagekit": "^6.0.0",
+    "inngest": "^4.23.0",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^9.10.0",
-    "@types/node": "^26.1.1"
+    "mongoose": "^9.10.0"
   },
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
