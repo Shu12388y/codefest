@@ -70,6 +70,37 @@ const submissionFn = inngest.createFunction(
         const submissionResult = await submissionInfo;
         console.log(submissionResult);
       } else {
+        const onlineJudge = new OnlineCodeJudge(ENV.JUDGE_TOKEN, ENV.JUDGE_URL);
+        const result = await onlineJudge.submission({
+          languageId: language_id,
+          sourceCode: code,
+          stdin: question.data.testInput,
+        });
+
+        const pendingStatusIds = new Set([1, 2]);
+        const submissionInfo = new Promise((resolve, reject) => {
+          const timerId = setInterval(async () => {
+            try {
+              const submission = await onlineJudge.getSubmission(
+                result.token as string,
+              );
+
+              const statusId = (submission as { status?: { id?: number } })
+                .status?.id;
+              if (statusId !== undefined && !pendingStatusIds.has(statusId)) {
+                clearInterval(timerId);
+                resolve(submission);
+                return;
+              }
+            } catch (error) {
+              clearInterval(timerId);
+              reject(error);
+            }
+          }, 6000);
+        });
+
+        const submissionResult = await submissionInfo;
+        console.log(submissionResult);
       }
     } catch (error) {
       throw new Error(String(error));
