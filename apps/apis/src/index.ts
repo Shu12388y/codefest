@@ -67,3 +67,4 @@ DB_CONNECT(ENV.DB_URI)
     .catch((e) => {
       console.log(e);
     });
+export default app;
