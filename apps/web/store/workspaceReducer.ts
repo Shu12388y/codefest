@@ -2,7 +2,14 @@ import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/tool
 import { fetchAiHint } from "@/lib/aiHint";
 
 export type WorkspaceLanguage = "JavaScript" | "TypeScript" | "Python" | "Java";
-export type WorkspaceResult = "idle" | "running" | "success" | "error";
+export type WorkspaceResult =
+  | "idle"
+  | "running"
+  | "passed"
+  | "failed"
+  | "code-error"
+  | "error";
+export type SubmissionType = "test" | "submission";
 
 export type WorkspaceState = {
   questionId: string | null;
@@ -15,6 +22,9 @@ export type WorkspaceState = {
   improvedCode: string | null;
   hintLoading: boolean;
   hintError: string | null;
+  submissionLoading: boolean;
+  submissionError: string | null;
+  submissionStatus: string | null;
 };
 
 const boilerplates: Record<WorkspaceLanguage, string> = {
@@ -37,12 +47,121 @@ const initialState: WorkspaceState = {
   improvedCode: null,
   hintLoading: false,
   hintError: null,
+  submissionLoading: false,
+  submissionError: null,
+  submissionStatus: null,
 };
 
 export const requestHint = createAsyncThunk(
   "workspace/requestHint",
   async ({ question, code, language }: { question: string; code: string; language: WorkspaceLanguage }) =>
     fetchAiHint({ question, code, language }),
+);
+
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000").replace(/\/$/, "");
+const languageIds: Record<WorkspaceLanguage, number> = {
+  JavaScript: 1,
+  TypeScript: 1,
+  Python: 5,
+  Java: 4,
+};
+
+type SubmissionResponse = {
+  message?: string;
+  data?: string;
+};
+
+type ResultResponse = {
+  message?: string;
+  data?: {
+    status?: string;
+    stdout?: string;
+    stderr?: string;
+  };
+};
+
+type SubmissionOutcome = "passed" | "failed" | "code-error";
+
+const getSubmissionOutcome = (
+  status: string,
+  stderr: string,
+): SubmissionOutcome => {
+  if (status === "Accepted") return "passed";
+  if (
+    status === "Compilation Error" ||
+    status === "Runtime Error" ||
+    status === "Runtime Error (NZEC)" ||
+    status === "Time Limit Exceeded" ||
+    Boolean(stderr)
+  ) {
+    return "code-error";
+  }
+  return "failed";
+};
+
+const wait = (milliseconds: number) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+export const executeSubmission = createAsyncThunk(
+  "workspace/executeSubmission",
+  async ({
+    code,
+    language,
+    questionId,
+    userId,
+    type,
+  }: {
+    code: string;
+    language: WorkspaceLanguage;
+    questionId: string;
+    userId: string;
+    type: SubmissionType;
+  }) => {
+    const submissionResponse = await fetch(`${API_URL}/api/v1/submit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        code,
+        language_id: languageIds[language],
+        question_id: questionId,
+        type,
+        userId,
+      }),
+    });
+
+    const submissionPayload =
+      (await submissionResponse.json()) as SubmissionResponse;
+    if (!submissionResponse.ok || !submissionPayload.data) {
+      throw new Error(submissionPayload.message || "Unable to create submission.");
+    }
+
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      await wait(2000);
+      const resultResponse = await fetch(
+        `${API_URL}/api/v1/result?submissionId=${encodeURIComponent(submissionPayload.data)}`,
+        { cache: "no-store" },
+      );
+      const resultPayload = (await resultResponse.json()) as ResultResponse;
+
+      if (!resultResponse.ok || !resultPayload.data) {
+        if (resultResponse.status === 404) continue;
+        throw new Error(resultPayload.message || "Unable to fetch submission result.");
+      }
+
+      if (resultPayload.data.status && resultPayload.data.status !== "QUEUE") {
+        const stdout = resultPayload.data.stdout || "";
+        const stderr = resultPayload.data.stderr || "";
+        return {
+          status: resultPayload.data.status,
+          output: stdout || stderr,
+          outcome: getSubmissionOutcome(resultPayload.data.status, stderr),
+          submitted: type === "submission",
+        };
+      }
+    }
+
+    throw new Error("Submission timed out while waiting for Judge0.");
+  },
 );
 
 const workspaceSlice = createSlice({
@@ -60,6 +179,9 @@ const workspaceSlice = createSlice({
       state.hint = null;
       state.improvedCode = null;
       state.hintError = null;
+      state.submissionLoading = false;
+      state.submissionError = null;
+      state.submissionStatus = null;
     },
     setCode: (state, action: PayloadAction<string>) => {
       state.code = action.payload;
@@ -67,6 +189,8 @@ const workspaceSlice = createSlice({
       state.output = "Run your solution against the sample test case.";
       state.submitted = false;
       state.improvedCode = null;
+      state.submissionError = null;
+      state.submissionStatus = null;
     },
     setLanguage: (state, action: PayloadAction<WorkspaceLanguage>) => {
       state.language = action.payload;
@@ -75,20 +199,24 @@ const workspaceSlice = createSlice({
       state.output = "Run your solution against the sample test case.";
       state.submitted = false;
       state.improvedCode = null;
+      state.submissionError = null;
+      state.submissionStatus = null;
     },
     resetCode: (state) => {
       state.code = boilerplates[state.language];
       state.result = "idle";
       state.output = "Run your solution against the sample test case.";
       state.submitted = false;
+      state.submissionError = null;
+      state.submissionStatus = null;
     },
     runCode: (state) => {
-      state.result = "success";
+      state.result = "passed";
       state.output = `Sample test passed for ${state.language}.`;
       state.submitted = false;
     },
     submitCode: (state) => {
-      state.result = "success";
+      state.result = "passed";
       state.output = `Submission accepted for ${state.language}.`;
       state.submitted = true;
     },
@@ -114,6 +242,28 @@ const workspaceSlice = createSlice({
       .addCase(requestHint.rejected, (state, action) => {
         state.hintLoading = false;
         state.hintError = action.error.message || "Unable to generate a hint.";
+      })
+      .addCase(executeSubmission.pending, (state) => {
+        state.result = "running";
+        state.output = "Running your code...";
+        state.submissionLoading = true;
+        state.submissionError = null;
+        state.submitted = false;
+      })
+      .addCase(executeSubmission.fulfilled, (state, action) => {
+        state.result = action.payload.outcome;
+        state.output = action.payload.output || "No output";
+        state.submissionStatus = action.payload.status;
+        state.submissionLoading = false;
+        state.submitted = action.payload.submitted;
+      })
+      .addCase(executeSubmission.rejected, (state, action) => {
+        state.result = "error";
+        state.output = action.error.message || "Unable to run submission.";
+        state.submissionLoading = false;
+        state.submissionError = state.output;
+        state.submissionStatus = null;
+        state.submitted = false;
       });
   },
 });

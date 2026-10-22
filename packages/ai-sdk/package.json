@@ -1,0 +1,22 @@
+{
+  "name": "@repo/ai-sdk",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build":"tsc"
+  },
+  "exports": {
+    "./ai": "./dist/index.js"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@google/genai": "^2.30.0"
+  }
+}

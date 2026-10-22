@@ -28,7 +28,9 @@ export class OnlineCodeJudgeRepo {
 
   static async find(submissionId: string) {
     try {
-      const data = await UserSubmission.findOne({ submissionId });
+      const data = await UserSubmission.findOne({
+        $or: [{ submissionId }, { _id: submissionId }],
+      });
 
       if (!data) {
         const response = new ResponseHelper(-1, "Submission not exists");
@@ -58,6 +60,27 @@ export class OnlineCodeJudgeRepo {
     try {
       const data = await UserSubmission.findOneAndUpdate(
         { submissionId },
+        submission,
+        { new: true, runValidators: true },
+      );
+
+      if (!data) {
+        const response = new ResponseHelper(-1, "Submission not exists");
+        return response.response();
+      }
+
+      const response = new ResponseHelper(1, "Updated", data);
+      return response.response();
+    } catch (error) {
+      const response = new ResponseHelper(-1, String(error));
+      return response.response();
+    }
+  }
+
+  static async updateById(id: string, submission: SubmissionData) {
+    try {
+      const data = await UserSubmission.findByIdAndUpdate(
+        id,
         submission,
         { new: true, runValidators: true },
       );

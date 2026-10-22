@@ -72,6 +72,21 @@ const _ENV = {
     : (() => {
         throw new Error(`${"JUDGE_TOKEN is required"}`);
       })(),
+  MODEL: process.env.MODEL
+    ? process.env.MODEL
+    : (() => {
+        throw new Error(`${"MODEL is required"}`);
+      })(),
+  GOOGLE_API_KEY: process.env.GOOGLE_API_KEY
+    ? process.env.GOOGLE_API_KEY
+    : (() => {
+        throw new Error(`${"GOOGLE_APIKEY is required"}`);
+      })(),
+  GOOGLE_MODEL: process.env.GOOGLE_MODEL
+    ? process.env.GOOGLE_MODEL
+    : (() => {
+        throw new Error(`${"GOOGLE_MODEL is required"}`);
+      })(),
 };
 
 export const ENV = Object.freeze(_ENV);

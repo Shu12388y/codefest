@@ -1,6 +1,7 @@
 import { Inngest } from "inngest";
 import { DB_CONNECT } from "../../database/db.js";
 import { DSAQuestionRepo } from "../../services/admin/dsa-question-service/repos/dsaQuestion.repo.js";
+import { OnlineCodeJudgeRepo } from "../../services/client/code-engine-service/repo/judge.repo.js";
 import { ENV } from "../../env/env.js";
 import { OnlineCodeJudge } from "../judge-0/judge.js";
 
@@ -20,6 +21,37 @@ const helloFn = inngest.createFunction(
   },
 );
 
+const decodeJudgeOutput = (value: unknown): string => {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  return Buffer.from(String(value), "base64").toString("utf8");
+};
+
+const saveSubmissionResult = async (
+  submissionId: string,
+  submissionResult: Record<string, unknown>,
+) => {
+  const response = await OnlineCodeJudgeRepo.updateById(submissionId, {
+    stdout: decodeJudgeOutput(submissionResult.stdout),
+    stderr: decodeJudgeOutput(submissionResult.stderr),
+    status:
+      typeof submissionResult.status === "object" &&
+      submissionResult.status !== null &&
+      "description" in submissionResult.status
+        ? String(
+            (submissionResult.status as { description?: unknown }).description ??
+              "",
+          )
+        : "",
+  });
+
+  if (response.statusCode === -1) {
+    throw new Error(response.message);
+  }
+};
+
 const submissionFn = inngest.createFunction(
   {
     id: "judge0-submission",
@@ -30,7 +62,10 @@ const submissionFn = inngest.createFunction(
   async ({ event, step }) => {
     try {
       const data = event.data;
-      const { code, language_id, question_id, type } = data;
+      const { code, language_id, question_id, type, submission_id } = data;
+      if (!submission_id || typeof submission_id !== "string") {
+        throw new Error("Invalid submission id");
+      }
       await DB_CONNECT(ENV.DB_URI);
       const question = await DSAQuestionRepo.findById(question_id);
       if (!question) {
@@ -43,6 +78,7 @@ const submissionFn = inngest.createFunction(
           languageId: language_id,
           sourceCode: code,
           stdin: question.data.testInput,
+          expected_output: question.data.judgeOutput,
         });
 
         const pendingStatusIds = new Set([1, 2]);
@@ -67,7 +103,9 @@ const submissionFn = inngest.createFunction(
           }, 6000);
         });
 
-        const submissionResult = await submissionInfo;
+        const submissionResult =
+          (await submissionInfo) as Record<string, unknown>;
+        await saveSubmissionResult(submission_id, submissionResult);
         console.log(submissionResult);
       } else {
         const onlineJudge = new OnlineCodeJudge(ENV.JUDGE_TOKEN, ENV.JUDGE_URL);
@@ -75,6 +113,7 @@ const submissionFn = inngest.createFunction(
           languageId: language_id,
           sourceCode: code,
           stdin: question.data.testInput,
+          expected_output: question.data.testOutput,
         });
 
         const pendingStatusIds = new Set([1, 2]);
@@ -99,7 +138,9 @@ const submissionFn = inngest.createFunction(
           }, 6000);
         });
 
-        const submissionResult = await submissionInfo;
+        const submissionResult =
+          (await submissionInfo) as Record<string, unknown>;
+        await saveSubmissionResult(submission_id, submissionResult);
         console.log(submissionResult);
       }
     } catch (error) {
