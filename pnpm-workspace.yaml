@@ -3,4 +3,6 @@ packages:
   - "packages/*"
 allowBuilds:
   '@clerk/shared': false
+  '@google/genai': false
   esbuild: false
+  protobufjs: false

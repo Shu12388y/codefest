@@ -2,6 +2,7 @@ type SubmissionRequest = {
   languageId: number;
   sourceCode: string;
   stdin?: string;
+  expected_output?:string
 };
 
 type SubmissionResponse = {
@@ -19,6 +20,7 @@ export class OnlineCodeJudge {
     languageId,
     sourceCode,
     stdin = "",
+    expected_output=""
   }: SubmissionRequest): Promise<SubmissionResponse> {
     if (!this.token) {
       throw new Error("Judge0 API token is required");
@@ -49,6 +51,7 @@ export class OnlineCodeJudge {
           language_id: languageId,
           source_code: Buffer.from(sourceCode, "utf8").toString("base64"),
           stdin: Buffer.from(stdin, "utf8").toString("base64"),
+          expected_output:Buffer.from(expected_output,'utf-8').toString("base64")
         }),
       },
     );

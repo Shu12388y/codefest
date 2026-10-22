@@ -5,11 +5,12 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "inngest:dev": "pnpm dlx inngest-cli@latest dev"
+    "inngest:dev": "pnpm --dir ..\\.. dlx inngest-cli@latest dev"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
     "@types/node": "^26.1.1",
+    "@repo/ai-sdk":"workspace:*",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "hono": "^4.13.7",
