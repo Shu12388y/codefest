@@ -1,13 +1,7 @@
-import { OpenRouterConfig } from "../../../../utils/open-router/openRouter.js";
 import { ENV } from "../../../../env/env.js";
 import { prompts } from "../prompts/prompts.js";
 import type { Context } from "hono";
 import { AISDK } from "@repo/ai-sdk/ai";
-
-const openRouterInstance = new OpenRouterConfig(
-  ENV.OPEN_ROUTER_MODEL,
-  ENV.OPEN_ROUTER_TOKEN,
-);
 
 const AIInstance = new AISDK(ENV.MODEL, ENV.GOOGLE_API_KEY);
 
@@ -50,12 +44,14 @@ export class openRouterController {
         return c.json({ message: "Question, code and language are required" });
       }
 
-      const response = await openRouterInstance.API(
-        prompts.hint(question, code, language),
-      );
-      const text =
-        response?.output?.[1]?.content?.[0]?.text ||
-        response?.output?.[0]?.content?.[0]?.text;
+      const response = await AIInstance.interact({
+         model: ENV.GOOGLE_MODEL,
+        input: prompts.hint(question, code, language),
+        
+      })
+      const text = typeof response === "object" && response !== null
+            ? response?.output_text
+            : undefined
 
       if (!text) {
         c.status(502);
