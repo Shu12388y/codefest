@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: codefest-apis
+    runtime: docker
+    rootDir: .
+    dockerfilePath: ./docker/apis.dockerfile
+    healthCheckPath: /api/v1/admin/health
+    envVars:
+      - key: DB_URI
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: OPEN_ROUTER_TOKEN
+        sync: false
+      - key: OPEN_ROUTER_MODEL
+        sync: false
+      - key: IMAGEKIT_PUBLIC_KEY
+        sync: false
+      - key: IMAGEKIT_PRIVATE_KEY
+        sync: false
+      - key: IMAGEKIT_URL_ENDPOINT
+        sync: false
+      - key: MODE
+        sync: false
+      - key: JUDGE_URL
+        sync: false
+      - key: JUDGE_TOKEN
+        sync: false
+      - key: MODEL
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: GOOGLE_MODEL
+        sync: false
+      - key: PORT
+        value: "4000"

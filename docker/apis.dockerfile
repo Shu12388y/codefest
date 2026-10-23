@@ -1,3 +1,5 @@
+# Build from the repository root:
+# docker build -f docker/apis.dockerfile -t codefest-apis .
 FROM node:24-slim AS build
 
 WORKDIR /app
@@ -19,7 +21,7 @@ COPY packages/typescript-config packages/typescript-config
 
 RUN pnpm --filter @repo/ai-sdk build \
   && pnpm --filter apis build \
-  && pnpm deploy --filter apis --prod /app/deploy
+  && pnpm deploy --legacy --filter apis --prod /app/deploy
 
 FROM node:24-slim AS runtime
 
