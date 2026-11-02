@@ -15,6 +15,7 @@ import { cors } from "hono/cors";
 import { serve as inngestServe } from "inngest/hono";
 import { inngest,functions } from "./utils/inngest/inngest.js";
 import { judgeRouter } from "./services/client/code-engine-service/routes/judge.repo.js";
+import { quizRouter } from "./services/client/quiz-service/routes/quiz.routes.js";
 
 
 export const app = new Hono();
@@ -50,6 +51,7 @@ app.route("/api/v1/admin", submissionRouter);
 app.route("/api/v1", clientBlogRouter);
 app.route("/api/v1", clientJobPostRouter);
 app.route("/api/v1", judgeRouter);
+app.route("/api/v1", quizRouter);
 
 
 DB_CONNECT(ENV.DB_URI)
