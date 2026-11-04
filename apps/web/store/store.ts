@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import workspaceReducer from "./workspaceReducer";
+import quizReducer from "./quizReducer";
 
 export const store = configureStore({
   reducer: {
     workspace: workspaceReducer,
+    quiz: quizReducer,
   },
 });
 

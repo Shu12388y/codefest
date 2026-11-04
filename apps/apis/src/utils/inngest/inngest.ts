@@ -4,6 +4,12 @@ import { DSAQuestionRepo } from "../../services/admin/dsa-question-service/repos
 import { OnlineCodeJudgeRepo } from "../../services/client/code-engine-service/repo/judge.repo.js";
 import { ENV } from "../../env/env.js";
 import { OnlineCodeJudge } from "../judge-0/judge.js";
+import {
+  generateQuizQuestions,
+  generateQuizQuestion,
+} from "../../agents/question.agent.js";
+import { clientRedis } from "../../cache/redis.js";
+import { sleep } from "../sleep/sleep.js";
 
 const inngest = new Inngest({
   id: "my-application",
@@ -41,8 +47,8 @@ const saveSubmissionResult = async (
       submissionResult.status !== null &&
       "description" in submissionResult.status
         ? String(
-            (submissionResult.status as { description?: unknown }).description ??
-              "",
+            (submissionResult.status as { description?: unknown })
+              .description ?? "",
           )
         : "",
   });
@@ -103,8 +109,10 @@ const submissionFn = inngest.createFunction(
           }, 6000);
         });
 
-        const submissionResult =
-          (await submissionInfo) as Record<string, unknown>;
+        const submissionResult = (await submissionInfo) as Record<
+          string,
+          unknown
+        >;
         await saveSubmissionResult(submission_id, submissionResult);
         console.log(submissionResult);
       } else {
@@ -138,8 +146,10 @@ const submissionFn = inngest.createFunction(
           }, 6000);
         });
 
-        const submissionResult =
-          (await submissionInfo) as Record<string, unknown>;
+        const submissionResult = (await submissionInfo) as Record<
+          string,
+          unknown
+        >;
         await saveSubmissionResult(submission_id, submissionResult);
         console.log(submissionResult);
       }
@@ -149,6 +159,44 @@ const submissionFn = inngest.createFunction(
   },
 );
 
-const functions = [helloFn, submissionFn];
+const questionGenerationFN = inngest.createFunction(
+  {
+    id: "question-generation",
+    triggers: {
+      event: "event/question.generation",
+    },
+  },
+  async ({ event, step }) => {
+    try {
+      const data = event.data;
+      const { id, topic, subtopic, count } = data;
+      if (!id || !topic || !subtopic || !count) {
+        return;
+      }
+      await step.run(
+        {
+          id: "question-info",
+        },
+        async () => {
+          try {
+            const info = await generateQuizQuestions({
+              count: count,
+              subtopic: subtopic,
+              topic: topic,
+            });
+            await clientRedis.set(id,JSON.stringify(info),'EX',3600);
+          } catch (error) {
+            throw new Error(String(error));
+          }
+        },
+      );
+      
+    } catch (error) {
+      console.error(error);
+    }
+  },
+);
+
+const functions = [helloFn, submissionFn, questionGenerationFN];
 
 export { inngest, functions };

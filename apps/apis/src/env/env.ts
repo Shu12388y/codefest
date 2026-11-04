@@ -87,6 +87,11 @@ const _ENV = {
     : (() => {
         throw new Error(`${"GOOGLE_MODEL is required"}`);
       })(),
+  REDIS_URI: process.env.REDIS_URI
+    ? process.env.REDIS_URI
+    : (() => {
+        throw new Error(`${"REDIS_URI is required"}`);
+      })(),
 };
 
 export const ENV = Object.freeze(_ENV);

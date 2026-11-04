@@ -1,6 +1,7 @@
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { createAgent, toolStrategy } from "langchain";
 import { z } from "zod";
+import { sleep } from "../utils/sleep/sleep.js";
 
 const optionSchema = z.object({
   a: z.string().min(1),
@@ -16,10 +17,10 @@ const questionSchema = z.object({
 });
 
 const quizQuestionResponseSchema = z.object({
-  questions: z.array(questionSchema).length(10),
+  question: questionSchema,
 });
 
-export const quizQuestionSchema = quizQuestionResponseSchema.shape.questions;
+export const quizQuestionSchema = quizQuestionResponseSchema.shape.question;
 
 export type QuizQuestion = z.infer<typeof quizQuestionSchema>;
 
@@ -27,6 +28,19 @@ export type QuizQuestionInput = {
   topic: string;
   subtopic: string;
 };
+
+export type QuizQuestionBatchInput = QuizQuestionInput & {
+  count: number;
+};
+
+const quizQuestionInputSchema = z.object({
+  topic: z.string().trim().min(1),
+  subtopic: z.string().trim().min(1),
+});
+
+const quizQuestionBatchInputSchema = quizQuestionInputSchema.extend({
+  count: z.number().int().min(1).max(50),
+});
 
 function getModel() {
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -47,29 +61,82 @@ export function createQuizQuestionAgent() {
     model: getModel(),
     responseFormat: toolStrategy(quizQuestionResponseSchema),
     systemPrompt:
-      "You create accurate multiple-choice quiz questions. Return exactly 10 questions, each with four distinct options. " +
+      "You create one accurate multiple-choice quiz question with four distinct options. " +
       "The correctOption must identify the option containing the correct answer. Do not include an answer explanation.",
   });
+}
+
+async function invokeQuizQuestion(
+  agent: ReturnType<typeof createQuizQuestionAgent>,
+  request: QuizQuestionInput,
+  questionNumber?: number,
+  previousQuestions: string[] = [],
+): Promise<QuizQuestion> {
+  const previousQuestionsPrompt =
+    previousQuestions.length > 0
+      ? ` Do not repeat or rephrase any of these questions: ${previousQuestions
+          .map((question) => `"${question}"`)
+          .join(", ")}.`
+      : "";
+
+  const result = await agent.invoke({
+    messages: [
+      {
+        role: "user",
+        content:
+          `Create a unique quiz question number ${questionNumber ?? 1} about the topic "${request.topic}" and subtopic "${request.subtopic}".` +
+          " Test a different concept, fact, or scenario from any other question." +
+          previousQuestionsPrompt,
+      },
+    ],
+  });
+  return quizQuestionSchema.parse(result.structuredResponse.question);
 }
 
 export async function generateQuizQuestion(
   input: QuizQuestionInput,
 ): Promise<QuizQuestion> {
-  const request = z
-    .object({
-      topic: z.string().trim().min(1),
-      subtopic: z.string().trim().min(1),
-    })
-    .parse(input);
+  const request = quizQuestionInputSchema.parse(input);
 
-  const result = await createQuizQuestionAgent().invoke({
-    messages: [
-      {
-        role: "user",
-        content: `Create 10 quiz questions about the topic "${request.topic}" and subtopic "${request.subtopic}".`,
-      },
-    ],
-  });
+  return invokeQuizQuestion(createQuizQuestionAgent(), request);
+}
 
-  return quizQuestionSchema.parse(result.structuredResponse.questions);
+export async function generateQuizQuestions(
+  input: QuizQuestionBatchInput,
+): Promise<QuizQuestion[]> {
+  const request = quizQuestionBatchInputSchema.parse(input);
+  const agent = createQuizQuestionAgent();
+  const questions: QuizQuestion[] = [];
+  const questionKeys = new Set<string>();
+  const maxAttemptsPerQuestion = 3;
+
+  for (let index = 0; index < request.count; index += 1) {
+    let question: QuizQuestion | undefined;
+
+    for (let attempt = 0; attempt < maxAttemptsPerQuestion; attempt += 1) {
+      const candidate = await invokeQuizQuestion(
+        agent,
+        request,
+        index + 1,
+        questions.map((item) => item.question),
+      );
+      const questionKey = candidate.question.trim().toLowerCase();
+
+      if (!questionKeys.has(questionKey)) {
+        question = candidate;
+        questionKeys.add(questionKey);
+        break;
+      }
+    }
+
+    if (!question) {
+      throw new Error(
+        `Unable to generate a unique question for batch item ${index + 1}`,
+      );
+    }
+
+    questions.push(question);
+  }
+
+  return questions;
 }
