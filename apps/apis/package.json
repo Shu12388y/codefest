@@ -5,7 +5,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "inngest:dev": "pnpm --dir ..\\.. dlx inngest-cli@latest dev"
+    "inngest:dev": "npx --yes inngest-cli@latest dev"
   },
   "dependencies": {
     "@hono/node-server": "^2.1.1",
@@ -18,12 +18,14 @@
     "hono": "^4.13.7",
     "imagekit": "^6.0.0",
     "inngest": "^4.23.0",
+    "ioredis": "^6.0.0",
     "jsonwebtoken": "^9.0.3",
     "langchain": "^1.6.0",
     "mongoose": "^9.10.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@types/ioredis": "^5.0.0",
     "@types/jsonwebtoken": "^9.0.10",
     "tsx": "^4.23.0",
     "typescript": "^7.0.2"

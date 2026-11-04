@@ -1,26 +1,38 @@
 import type { Context } from "hono";
 import {
-  generateQuizQuestion,
   type QuizQuestionInput,
 } from "../../../../agents/question.agent.js";
 import { z } from "zod";
+import {inngest} from "../../../../utils/inngest/inngest.js";
+import { randomUUID } from "node:crypto";
+import {clientRedis} from  "../../../../cache//redis.js";
 
 const quizQuestionInputSchema = z.object({
   topic: z.string().trim().min(1),
   subtopic: z.string().trim().min(1),
 });
 
+
 export class QuizController {
   static async generateQuestion(c: Context) {
     try {
       const body = await c.req.json<QuizQuestionInput>();
       const input = quizQuestionInputSchema.parse(body);
-      const question = await generateQuizQuestion(input);
-
+      const NUMBER_OF_QUESTION = 10;
+      const ID = randomUUID();
+      await inngest.send({
+        name:"event/question.generation",
+        data:{
+          topic:input.topic,
+          subtopic:input.subtopic,
+          count:NUMBER_OF_QUESTION,
+          id:ID
+        }
+      })
       c.status(200);
       return c.json({
         message: "Quiz question generated successfully",
-        data: question,
+        data: ID,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -34,6 +46,29 @@ export class QuizController {
       console.error(error);
       c.status(500);
       return c.json({ message: "Unable to generate quiz question" });
+    }
+  }
+  static async getQuestion(c:Context){
+    try {
+      const {id} = c.req.param() || c.req.json()  ;
+      if(!id){
+        c.status(403);
+        return c.json({message:"ID is requried"})
+      }
+      const info = await clientRedis.get(id);
+      if (!info) {
+        c.status(202);
+        return c.json({
+          message: "Quiz questions are still being generated",
+          pending: true,
+        });
+      }
+      c.status(200)
+      return c.json({message:"success",data:JSON.parse(info || "")})
+    } catch (error) {
+      console.log(error);
+      c.status(500)
+      return c.json({message:"Internal Server Error"})
     }
   }
 }
